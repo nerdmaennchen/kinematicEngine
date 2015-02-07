@@ -8,7 +8,7 @@
 #ifndef KINEMATICNODEROTATION_H_
 #define KINEMATICNODEROTATION_H_
 
-#include <utils/units.h>
+#include "utils/units.h"
 #include "kinematicNode.h"
 
 #include "../physics/ODEHingeMotor.h"
@@ -21,9 +21,9 @@ public:
 			MotorID id,
 			KinematicNode *parent,
 			std::string name,
-			double minValue,
-			double maxValue,
-			double preferredValue,
+			Degree minValue,
+			Degree maxValue,
+			Degree preferredValue,
 			double maxForce,
 			RPM maxSpeed,
 			Millimeter translationX,
@@ -70,12 +70,12 @@ public:
 	virtual void setTorqueForODE(double torque);
 
 protected:
-	Degree m_angle;
+	Radian m_angle;
 
 	dJointID m_rotationJoint;
 
 	double m_maxForce;
-	RPM m_maxSpeed;
+	double m_maxSpeed;
 
 	ODEHingeMotor *m_hingeMotor;
 };

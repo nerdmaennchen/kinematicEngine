@@ -5,7 +5,7 @@
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskCOMWholeRobot.h>
+#include "kinematicEngineTaskCOMWholeRobot.h"
 
 KinematicEngineTaskCOMWholeRobot::KinematicEngineTaskCOMWholeRobot()
 	: KinematicEngineTask()
@@ -13,13 +13,13 @@ KinematicEngineTaskCOMWholeRobot::KinematicEngineTaskCOMWholeRobot()
 }
 
 KinematicEngineTaskCOMWholeRobot::KinematicEngineTaskCOMWholeRobot(std::string name, MotorID base, KinematicTree const &tree)
-	: KinematicEngineTask(name, base, EFFECTOR_ID_ROOT, tree)
+	: KinematicEngineTask(name, base, MOTOR_NONE, tree)
 	, m_referenceCoordinateSystem(base)
 {
 }
 
 KinematicEngineTaskCOMWholeRobot::KinematicEngineTaskCOMWholeRobot(std::string name, MotorID base, MotorID reference, KinematicTree const &tree)
-	: KinematicEngineTask(name, base, EFFECTOR_ID_ROOT, tree)
+	: KinematicEngineTask(name, base, MOTOR_NONE, tree)
 	, m_referenceCoordinateSystem(reference)
 {
 

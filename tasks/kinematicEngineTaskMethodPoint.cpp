@@ -5,7 +5,7 @@
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskMethodPoint.h>
+#include "kinematicEngineTaskMethodPoint.h"
 
 KinematicEngineTaskMethodPoint::KinematicEngineTaskMethodPoint()
 	: KinematicEngineTaskMethod()

@@ -5,13 +5,13 @@
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTask.h>
+#include "kinematicEngineTask.h"
 
 
 KinematicEngineTask::KinematicEngineTask():
 		m_name("uninitialized"),
-		m_baseNode(EFFECTOR_ID_ROOT),
-		m_effectorNode(EFFECTOR_ID_ROOT),
+		m_baseNode(MOTOR_NONE),
+		m_effectorNode(MOTOR_NONE),
 		m_method(nullptr),
 		m_speed(0.),
 		m_actuatorsToIgnore(),

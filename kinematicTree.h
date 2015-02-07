@@ -8,15 +8,13 @@
 #ifndef KINEMATICTREE_H_
 #define KINEMATICTREE_H_
 
-#include "debug.h"
-#include "debugging/debug3d.h"
 #include "utils/units.h"
 
 #include "node/kinematicNode.h"
 #include "tasks/kinematicPath.h"
 
-#include "hardware/robot/robotDescription.h"
-#include "hardware/robot/motorIDs.h"
+#include "robot/robotDescription.h"
+#include "utils/motorIDs.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -34,22 +32,18 @@ public:
 
 	void setup(const RobotDescription &robotDescription);
 
-	void setMotorValue(MotorID id, Degree value);
-	void setMotorValues(std::map<MotorID, Degree> const& values);
+	void setMotorValue(MotorID id, double value);
+	void setMotorValues(std::map<MotorID, double> const& values);
 
-	void setMotorSpeed(MotorID id, RPM value);
-	void setMotorSpeeds(std::map<MotorID, RPM> const& values);
+	void setMotorSpeed(MotorID id, double value);
+	void setMotorSpeeds(std::map<MotorID, double> const& values);
 
-	void getMotorValues(std::map<MotorID, Degree> & values) const;
-	void getMotorSpeeds(std::map<MotorID, RPM> & values) const;
-
-	void setGyroscopeAngles(arma::mat33 _rotMat);
-
-	void drawPose(DebugStream3D &debug3d, bool includeMasses, bool includeEquivalentMasses, bool drawCOM, bool drawGroundPlane) const;
+	void getMotorValues(std::map<MotorID, double> & values) const;
+	void getMotorSpeeds(std::map<MotorID, double> & values) const;
 
 	arma::mat44 getTransitionMatrixFromTo(MotorID from, MotorID to) const;
 
-	Degree clipAngleForMotor(MotorID id, Degree angle) const;
+	double clipValueForMotor(MotorID id, double value) const;
 
 	KinematicPath getPathFromNodeToNode(MotorID from, MotorID to) const;
 
@@ -115,8 +109,7 @@ private:
 	std::map<MotorID, KinematicNode*> m_nodes;
 	std::map<MotorID, int>            m_nodeToInt;
 	std::vector<MotorID>              m_nodeToExt;
-
-	void drawPoseSub(DebugStream3D &debug3d, const KinematicNode *baseNode, arma::mat44 prev, bool includeMasses, bool includeEquivalentMasses) const;
+	KinematicNode * m_root;
 
 	KinematicMass getCOMSub(const KinematicNode *node, arma::mat44 prev) const;
 

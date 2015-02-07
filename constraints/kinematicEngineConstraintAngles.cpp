@@ -5,7 +5,7 @@
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/constraints/kinematicEngineConstraintAngles.h>
+#include "kinematicEngineConstraintAngles.h"
 
 
 KinematicEngineConstraintAngles::KinematicEngineConstraintAngles()
@@ -23,16 +23,10 @@ KinematicEngineConstraintAngles::KinematicEngineConstraintAngles(KinematicTree c
 	arma::colvec motorIDsVec = arma::zeros(m_numMotors);
 	for (int i(0); i < m_numMotors; ++i) {
 		const KinematicNode* node = tree.getNode(tree.toExt(i));
-		m_minValues(i) = Radian(Degree(node->getMinValue() * degrees)).value();
-		m_maxValues(i) = Radian(Degree(node->getMaxValue() * degrees)).value();
+		m_minValues(i) = node->getMinValue();
+		m_maxValues(i) = node->getMaxValue();
 		motorIDsVec(i) = tree.toExt(i);
 	}
-
-	std::cout.precision(3);
-	std::cout << std::fixed << std::setw(7);
-	motorIDsVec.t().raw_print(std::cout);
-	m_minValues.t().raw_print(std::cout);
-	m_maxValues.t().raw_print(std::cout);
 }
 
 KinematicEngineConstraintAngles::~KinematicEngineConstraintAngles() {

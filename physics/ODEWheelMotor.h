@@ -12,20 +12,19 @@
 
 class ODEWheelMotor : public ODEHingeMotor {
 public:
-	ODEWheelMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, RPM maxSpeed);
+	ODEWheelMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, double maxSpeed);
 
 	virtual ~ODEWheelMotor();
 
+	virtual void setDesiredValueAndSpeed(double targetValue, double targetSpeed) override;
+	void setDesiredValue(double targetValue) override;
+	void setDesiredSpeed(double targetSpeed) override;
 
-	virtual void setDesiredAngleAndSpeed(Degree targetAngle, RPM targetSpeed);
-	virtual void setDesiredAngle(Degree targetAngle);
-	virtual void setDesiredSpeed(RPM targetSpeed);
-
-	virtual void simulatorCallback(Second timeDelta);
+	void simulatorCallback(double timeDelta) override;
 
 private:
 
-	void updateJointForces(Second timeDelta);
+	void updateJointForces(double timeDelta);
 };
 
 #endif /* ODEWHEELMOTOR_H_ */

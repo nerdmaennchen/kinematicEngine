@@ -7,13 +7,11 @@
 
 #include "ODEParallelMotor.h"
 
-#include <debug.h>
-
-ODEParallelMotor::ODEParallelMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, Degree defaultAngle, Degree minAngle, Degree maxAngle, RPM maxSpeed, Degree complianceSlope, Degree compliangeMargin)
+ODEParallelMotor::ODEParallelMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, double defaultAngle, double minAngle, double maxAngle, double maxSpeed, double complianceSlope, double compliangeMargin)
 	: ODEHingeMotor(motorID, jointID, enviroment, node, maxNewtonmeter, defaultAngle, minAngle, maxAngle, maxSpeed, complianceSlope, compliangeMargin)
 {}
 
-ODEParallelMotor::ODEParallelMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, Degree defaultAngle, Degree minAngle, Degree maxAngle, RPM maxSpeed)
+ODEParallelMotor::ODEParallelMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, double defaultAngle, double minAngle, double maxAngle, double maxSpeed)
 	: ODEHingeMotor(motorID, jointID, enviroment, node, maxNewtonmeter, defaultAngle, minAngle, maxAngle, maxSpeed)
 {}
 

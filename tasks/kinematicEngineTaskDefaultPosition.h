@@ -8,7 +8,7 @@
 #ifndef KINEMATICENGINETASKDEFAULTPOSITION_H_
 #define KINEMATICENGINETASKDEFAULTPOSITION_H_
 
-#include "representations/motion/kinematicTree.h"
+#include "../kinematicTree.h"
 
 class KinematicEngineTaskDefaultPosition {
 public:

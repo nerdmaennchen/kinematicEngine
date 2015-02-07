@@ -8,7 +8,7 @@
 #ifndef ODEMOTOR_H_
 #define ODEMOTOR_H_
 
-#include <utils/units.h>
+#include "utils/units.h"
 #include <ode/ode.h>
 
 #include "physicsEnvironment.h"
@@ -23,26 +23,25 @@ public:
 	, m_physicsEnvironment(enviroment)
 	, m_motorID(motorID)
 	{
-//		m_physicsEnvironment->addStepCallback(this);
 		m_physicsEnvironment->addMotor(motorID, this);
 	}
 
 	virtual ~ODEMotor() {};
 
-	virtual Degree getCurAngle() const = 0;
-	virtual RPM getCurSpeed() const = 0;
+	virtual double getCurValue() const = 0;
+	virtual double getCurSpeed() const = 0;
 
-	virtual void setDesiredAngleAndSpeed(Degree targetAngle, RPM targetSpeed) = 0;
-	virtual void setDesiredAngle(Degree targetAngle) = 0;
-	virtual void setDesiredSpeed(RPM targetSpeed) = 0;
+	virtual void setDesiredValueAndSpeed(double targetValue, double targetSpeed) = 0;
+	virtual void setDesiredValue(double targetValue) = 0;
+	virtual void setDesiredSpeed(double targetSpeed) = 0;
 
 	virtual void enableMotor(bool enabled) = 0;
 
 
-	virtual void   setAngleOffset(Degree offset) = 0;
-	virtual Degree getAngleOffset() = 0;
+	virtual void   setValueOffset(double offset) = 0;
+	virtual double getValueOffset() = 0;
 
-	virtual void simulatorCallback(Second timeDelta) = 0;
+	virtual void simulatorCallback(double timeDelta) = 0;
 
 protected:
 	dJointID m_jointID;

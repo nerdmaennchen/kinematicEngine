@@ -18,6 +18,10 @@
 #include "kinematicNodeDummy.h"
 #include "kinematicNodeFixed.h"
 
+#include "utils/utils.h"
+#include <iostream>
+
+
 enum class KinematicNodeType  {
 	KINEMATIC_NODE_TYPE_DUMMY,
 	KINEMATIC_NODE_TYPE_ROTATION,
@@ -50,9 +54,9 @@ public:
 		return new KinematicNodeRotation(id,
 						nullptr,
 						name,
-						minValue,
-						maxValue,
-						defaultValue,
+						minValue * degrees,
+						maxValue * degrees,
+						defaultValue * degrees,
 						maxForce,
 						maxSpeed * rounds_per_minute,
 						translationX,
@@ -156,9 +160,9 @@ public:
 		return new KinematicNodeParallelRotation(id,
 						nullptr,
 						name,
-						minValue,
-						maxValue,
-						defaultValue,
+						minValue * degrees,
+						maxValue * degrees,
+						defaultValue * degrees,
 						maxForce,
 						maxSpeed * rounds_per_minute,
 						translationX,
@@ -227,7 +231,7 @@ private:
 		try {
 			name = ptree.second.get<std::string>("<xmlattr>.name");
 		} catch (boost::exception const& e) {
-			ERROR("RobotDescription node is missing name.");
+			std::cerr << "RobotDescription node is missing name." << std::endl;
 			return;
 		}
 
@@ -237,9 +241,6 @@ private:
 		if (optId) {
 			id = optId.get();
 		} else {
-			static CriticalSection cs;
-			CriticalSectionLock lock(cs);
-
 			static int autoID = 100000;
 			id = MotorID(autoID++);
 		}
@@ -386,7 +387,7 @@ KinematicNode* KinematicNodeFactory::createNodeFromPTree(boost::property_tree::p
 				if (textureProp.is_initialized()) {
 					std::istringstream textureSS(textureProp.get());
 					textureSS >> textureNo;
-					textureNo = Math::limited(textureNo, 0, 4);
+					textureNo = utils::limited(textureNo, 0, 4);
 				}
 
 				boost::optional<std::string> visibleProp = geometryChild.second.get_optional<std::string>("<xmlattr>.visible");

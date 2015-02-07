@@ -8,7 +8,7 @@
 #ifndef KINEMATICNODEPARALLELROTATION_H_
 #define KINEMATICNODEPARALLELROTATION_H_
 
-#include <utils/units.h>
+#include "utils/units.h"
 #include "kinematicNode.h"
 
 #include "../physics/ODEParallelMotor.h"
@@ -20,9 +20,9 @@ public:
 	KinematicNodeParallelRotation(MotorID id,
 			KinematicNode *parent,
 			std::string name,
-			double minValue,
-			double maxValue,
-			double preferredValue,
+			Degree minValue,
+			Degree maxValue,
+			Degree preferredValue,
 			double maxForce,
 			RPM maxSpeed,
 			Millimeter translationX,
@@ -70,7 +70,7 @@ public:
 	virtual void setTorqueForODE(double torque);
 
 private:
-	Degree m_angle;
+	Radian m_angle;
 	Millimeter m_limbLength;
 
 	dBodyID m_intermediateBodyActive;
@@ -83,7 +83,7 @@ private:
 	ODEParallelMotor *m_odeMotor;
 
 	double m_maxForce;
-	RPM m_maxSpeed;
+	double m_maxSpeed;
 };
 
 #endif /* KINEMATICNODEPARALLELROTATION_H_ */

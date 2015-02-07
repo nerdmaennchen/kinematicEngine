@@ -6,24 +6,16 @@
  */
 
 #include "physicsVisualization.h"
-#include "management/config/config.h"
-#include "management/commandLine.h"
+#include <thread>
 
-
-namespace {
-	auto tmp = ConfigRegistry::getInstance().registerSwitch("followcam", "In the physics simulation, the camera follows the object");
-}
 
 
 PhysicsVisualization::PhysicsVisualization()
-	: lastObservedPosition{0, 0, 0}
 {
 }
 
 PhysicsVisualization::~PhysicsVisualization() {
 }
-
-#ifdef DESKTOP
 
 #include <drawstuff/drawstuff.h>
 
@@ -36,11 +28,22 @@ PhysicsVisualization::~PhysicsVisualization() {
 #define dsDrawCylinder dsDrawCylinderD
 #endif
 
-#define DRAW_JOINTS_TOO
+//#define DRAW_JOINTS_TOO
 
 static dsFunctions g_fn;
 static PhysicsEnvironment *g_envToDraw;
 static std::thread *g_drawingThread;
+
+PhysicsVisualization& PhysicsVisualization::getInstance()
+{
+	static PhysicsVisualization* instance(nullptr);
+	if (nullptr == instance) {
+		instance = new PhysicsVisualization();
+	}
+
+	return *instance;
+}
+
 
 static void drawFunctionWrapper(int pause)
 {
@@ -51,8 +54,8 @@ static void drawFunctionWrapper(int pause)
 static void start()
 {
     // initial camera position
-    static float xyz[3] = {-1, -1, 0.5};
-    static float hpr[3] = {45, 0, 0};
+    static float xyz[3] = {1, 1, 0.5};
+    static float hpr[3] = {225, 0, 0};
     dsSetViewpoint (xyz,hpr);
 }
 
@@ -153,8 +156,7 @@ static void drawGeom(dGeomID geomID)
 
 void PhysicsVisualization::setEnvironmentToDraw(PhysicsEnvironment *env) {
 	// dummy implementation
-	CriticalSectionLock csl(m_cs);
-
+	std::unique_lock<std::mutex> lock(m_mutex);
 	if (nullptr != g_envToDraw && nullptr != g_drawingThread)
 	{
 		// quit current simulation
@@ -182,35 +184,6 @@ void PhysicsVisualization::setEnvironmentToDraw(PhysicsEnvironment *env) {
 
 void PhysicsVisualization::draw(int pause)
 {
-	if (CommandLine::getInstance().isSwitchEnabled("followcam")) {
-		// get first geom, we work on the assumption that following its movements
-		// will follow the object we are interested in
-		dGeomID geomID = dSpaceGetGeom(g_envToDraw->getVisualsSpaceID(), 0);
-		if (nullptr != geomID) {
-			const dReal *currentPosition = dGeomGetPosition(geomID);
-
-			// translation
-			dReal delta[3] = {
-					currentPosition[0] - lastObservedPosition[0],
-					currentPosition[1] - lastObservedPosition[1],
-					currentPosition[2] - lastObservedPosition[2]
-			};
-
-			// apply to viewpoint
-			float viewPoint[3], hpr[3];
-			dsGetViewpoint(viewPoint, hpr);
-			viewPoint[0] += delta[0];
-			viewPoint[1] += delta[1];
-			viewPoint[2] += delta[2];
-			dsSetViewpoint(viewPoint, hpr);
-
-			// remember this position
-			lastObservedPosition[0] = currentPosition[0];
-			lastObservedPosition[1] = currentPosition[1];
-			lastObservedPosition[2] = currentPosition[2];
-		}
-	}
-
 	if (nullptr != g_drawingThread && nullptr != g_envToDraw)
 	{
 		g_envToDraw->pauseSimulation();
@@ -232,17 +205,4 @@ void PhysicsVisualization::draw(int pause)
 		g_envToDraw->unPauseSimulation();
 	}
 }
-
-#else
-
-void PhysicsVisualization::setEnvironmentToDraw(PhysicsEnvironment *env) {
-	// dummy implementation
-}
-
-void PhysicsVisualization::draw(int pause)
-{
-	// dummy implementation
-}
-
-#endif
 

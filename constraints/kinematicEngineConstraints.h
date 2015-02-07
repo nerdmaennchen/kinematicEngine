@@ -8,7 +8,7 @@
 #ifndef KINEMATICENGINE_KINEMATICENGINECONSTRAINTS_H_
 #define KINEMATICENGINE_KINEMATICENGINECONSTRAINTS_H_
 
-#include <tools/kinematicEngine/constraints/kinematicEngineConstraint.h>
+#include "kinematicEngineConstraint.h"
 #include <vector>
 
 typedef std::vector<KinematicEngineConstraint*> KinematicEngineConstraints;

@@ -5,7 +5,7 @@
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskDefaultPosition.h>
+#include "kinematicEngineTaskDefaultPosition.h"
 
 KinematicEngineTaskDefaultPosition::KinematicEngineTaskDefaultPosition()
 	: m_weight(1.)
@@ -30,13 +30,13 @@ void KinematicEngineTaskDefaultPosition::setDefaultValues(KinematicTree const& t
 arma::colvec KinematicEngineTaskDefaultPosition::getErrors(KinematicTree const& tree) const
 {
 	uint motorCnt = tree.getMotorCt();
-	std::map<MotorID, Degree> values;
+	std::map<MotorID, double> values;
 	tree.getMotorValues(values);
 
 	arma::colvec curValues = arma::zeros(motorCnt);
 
 	for (uint i = 0; i < motorCnt; ++i) {
-		curValues(i) = Radian(values[tree.toExt(i)]).value();
+		curValues(i) = values[tree.toExt(i)];
 	}
 
 	return (m_defaultValues - curValues) * m_weight;

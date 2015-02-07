@@ -8,7 +8,7 @@
 #ifndef KINEMATICENGINETASK_H_
 #define KINEMATICENGINETASK_H_
 
-#include "representations/motion/kinematicTree.h"
+#include "../kinematicTree.h"
 #include "kinematicEngineTaskMethod.h"
 #include "kinematicEngineTaskMethodLine.h"
 #include "kinematicEngineTaskMethodPlane.h"

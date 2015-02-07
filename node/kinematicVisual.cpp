@@ -1,7 +1,6 @@
 #include "kinematicVisual.h"
 #include "../physics/odeUtils.h"
 #include "../physics/ODEUserObject.h"
-#include "debug.h"
 
 /*------------------------------------------------------------------------------------------------*/
 

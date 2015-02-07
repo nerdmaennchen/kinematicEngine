@@ -12,14 +12,14 @@
 
 class ODEPropellerMotor : public ODEWheelMotor {
 public:
-	ODEPropellerMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, RPM maxSpeed, double speedToForceFactor);
+	ODEPropellerMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, double maxSpeed, double speedToForceFactor);
 	virtual ~ODEPropellerMotor();
 
-	virtual void simulatorCallback(Second timeDelta);
+	virtual void simulatorCallback(double timeDelta);
 
 private:
 
-	void updateJointForces(Second timeDelta);
+	void updateJointForces(double timeDelta);
 
 protected:
 	double m_speedToForceFactor;

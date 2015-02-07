@@ -8,7 +8,7 @@
 #include "ODEPropellerMotor.h"
 #include "../node/kinematicNode.h"
 
-ODEPropellerMotor::ODEPropellerMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, RPM maxSpeed, double speedToForceFactor)
+ODEPropellerMotor::ODEPropellerMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, double maxSpeed, double speedToForceFactor)
 	: ODEWheelMotor(motorID, jointID, enviroment, node, maxNewtonmeter, maxSpeed)
 	, m_speedToForceFactor(speedToForceFactor)
 {
@@ -17,16 +17,16 @@ ODEPropellerMotor::ODEPropellerMotor(MotorID motorID, dJointID jointID, PhysicsE
 ODEPropellerMotor::~ODEPropellerMotor() {
 }
 
-void ODEPropellerMotor::simulatorCallback(Second timeDelta)
+void ODEPropellerMotor::simulatorCallback(double timeDelta)
 {
 	::ODEWheelMotor::simulatorCallback(timeDelta);
 	// calculate which force is generated
-	RPM curSpeed = getCurSpeed();
+	double curSpeed = getCurSpeed();
 
 	dReal rotationVec[3];
 	dReal rotationPosition[3];
 
-	double forceFactor = curSpeed.value() * m_speedToForceFactor;
+	double forceFactor = curSpeed * m_speedToForceFactor;
 
 	dJointGetHingeAxis(m_jointID, rotationVec);
 	dJointGetHingeAnchor(m_jointID, rotationPosition);

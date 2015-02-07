@@ -5,7 +5,7 @@
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskMethodPlane.h>
+#include "kinematicEngineTaskMethodPlane.h"
 
 KinematicEngineTaskMethodPlane::KinematicEngineTaskMethodPlane()
 	: m_transform(arma::zeros(1, 3))

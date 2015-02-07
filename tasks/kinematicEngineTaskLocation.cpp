@@ -5,7 +5,7 @@
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskLocation.h>
+#include "kinematicEngineTaskLocation.h"
 #include <armadillo>
 
 KinematicEngineTaskLocation::KinematicEngineTaskLocation() : KinematicEngineTask()
@@ -14,20 +14,20 @@ KinematicEngineTaskLocation::KinematicEngineTaskLocation() : KinematicEngineTask
 
 KinematicEngineTaskLocation::KinematicEngineTaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, const KinematicTree &tree)
 	: KinematicEngineTask(name, baseNode, effectorNode, tree)
-	, m_referenceCoordinateSystem(effectorNode)
+	, m_referenceCoordinateSystem(baseNode)
 {
 }
 
 KinematicEngineTaskLocation::KinematicEngineTaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, MotorID referenceNode, const KinematicTree &tree)
 	: KinematicEngineTask(name, baseNode, effectorNode, tree)
-	, m_referenceCoordinateSystem(referenceNode)
+	, m_referenceCoordinateSystem(baseNode)
 {
 
 }
 
 KinematicEngineTaskLocation::KinematicEngineTaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, const KinematicTree &tree, KinematicEngineTaskMethod *method)
 	: KinematicEngineTask(name, baseNode, effectorNode, tree, method)
-	, m_referenceCoordinateSystem(effectorNode)
+	, m_referenceCoordinateSystem(baseNode)
 {
 }
 
@@ -52,7 +52,8 @@ arma::mat KinematicEngineTaskLocation::getJacobianForTask(const KinematicTree &k
 			arma::colvec3 vecToEndeffector = forward.col(3).rows(0, 2);
 
 			if ((false == node->isFixedNode()) &&
-				(KinematicPathNode::Direction::LINK != m_invPath[pathIndex].m_direction))
+				(KinematicPathNode::Direction::LINK != m_invPath[pathIndex].m_direction) &&
+				(pathIndex < m_invPath.size() - 1))
 			{
 				arma::colvec3 partialDerivative = node->getPartialDerivativeOfLocationToEffector(vecToEndeffector);
 				if (KinematicPathNode::Direction::FROM_PARENT == m_invPath[pathIndex].m_direction)
@@ -95,7 +96,7 @@ arma::mat KinematicEngineTaskLocation::getJacobianForTask(const KinematicTree &k
 arma::colvec KinematicEngineTaskLocation::getError(const KinematicTree &kinematicTree) const {
 	/* calculate the position of the effector */
 	const arma::mat44 transition = kinematicTree.getTransitionMatrixFromTo(m_baseNode, m_effectorNode);
-	const arma::mat44 transition2 = kinematicTree.getTransitionMatrixFromTo(m_referenceCoordinateSystem, m_effectorNode);
+	const arma::mat44 transition2 = kinematicTree.getTransitionMatrixFromTo(m_referenceCoordinateSystem, m_baseNode);
 	arma::colvec3 value = m_method->getTransform() * (transition2.submat(0, 0, 2, 2) * transition.col(3).rows(0, 2));
 
 	arma::colvec target = m_method->getTarget();

@@ -8,7 +8,7 @@
 #ifndef TOOLS_KINEMATICENGINE_CONSTRAINTS_KINEMATICENGINECONSTRAINT_H_
 #define TOOLS_KINEMATICENGINE_CONSTRAINTS_KINEMATICENGINECONSTRAINT_H_
 
-#include <representations/motion/kinematicTree.h>
+#include "../kinematicTree.h"
 
 class KinematicEngineConstraint {
 public:

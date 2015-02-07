@@ -8,9 +8,11 @@
 #ifndef PHYSICSENVIROMENT_H_
 #define PHYSICSENVIROMENT_H_
 
+#include <map>
+
 #include "ode/ode.h"
 #include "utils/units.h"
-#include <hardware/robot/motorIDs.h>
+#include "utils/motorIDs.h"
 
 class PhysicsEnviromentPrivData;
 class KinematicTree;
@@ -28,7 +30,7 @@ public:
 	/**
 	 * called from the simulation environment before each simulation step
 	 */
-	virtual void simulatorCallback(Second timeDelta) = 0;
+	virtual void simulatorCallback(double timeDelta) = 0;
 };
 
 class PhysicsEnvironment {
@@ -39,7 +41,7 @@ public:
 
 	void setKinematicModel(KinematicTree *tree);
 
-	void simulateStep(Millisecond step);
+	void simulateStep(Second step);
 
 	dSpaceID getCollisionSpaceID();
 	dSpaceID getVisualsSpaceID();

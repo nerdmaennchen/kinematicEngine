@@ -9,11 +9,9 @@
 #define PHYSICSVISUALIZATION_H_
 
 #include "physicsEnvironment.h"
-#include <utils/patterns/singleton.h>
-#include <utils/system/thread.h>
-#include <future>
+#include <mutex>
 
-class PhysicsVisualization : public Singleton<PhysicsVisualization> {
+class PhysicsVisualization {
 
 public:
 	virtual ~PhysicsVisualization();
@@ -22,14 +20,12 @@ public:
 
 	void draw(int pause);
 
+	static PhysicsVisualization& getInstance();
+
 private:
 	PhysicsVisualization();
-	friend class Singleton<PhysicsVisualization>;
 
-	/// the position we are looking at
-	dReal lastObservedPosition[3];
-
-	CriticalSection m_cs;
+	std::mutex m_mutex;
 };
 
 #endif /* PHYSICSVISUALIZATION_H_ */

@@ -5,11 +5,11 @@
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskCOM.h>
+#include "kinematicEngineTaskCOM.h"
 
 
 KinematicEngineTaskCOM::KinematicEngineTaskCOM() : KinematicEngineTask(),
-		m_referenceNode(EFFECTOR_ID_ROOT)
+		m_referenceNode(MOTOR_NONE)
 {
 
 }

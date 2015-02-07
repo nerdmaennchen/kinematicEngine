@@ -8,47 +8,22 @@
 #ifndef KINEMATICENGINETASKS_H_
 #define KINEMATICENGINETASKS_H_
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTask.h>
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskDefaultPosition.h>
+#include "robot/robotDescription.h"
+#include "kinematicEngineTask.h"
+#include "kinematicEngineTaskDefaultPosition.h"
 #include <array>
 
-namespace KinematicEngineTasksTypes
-{
-	enum level : uint {
-		TASK_LEVEL_GROUND_CONTACT_CONSTRAINT = 0,
-		TASK_LEVEL_INTERNAL_CONSTRAINT = 1,
-		TASK_LEVEL_DYNAMICS_CONSTRAINT = 2,
-		TASK_LEVEL_REGULAR = 3,
-		NUM_TASK_LEVELS = 4
-	};
-}
+typedef std::map<uint, std::vector<const KinematicEngineTask*>> KinematicEngineTasksContainer;
 
-typedef std::array<std::vector<const KinematicEngineTask*>, KinematicEngineTasksTypes::NUM_TASK_LEVELS> KinematicEngineTasksContainer;
-
-/**
- * @ingroup representations
- */
 class KinematicEngineTasks {
 public:
 
 
-	KinematicEngineTasks();
+	KinematicEngineTasks(RobotDescription const& description);
 	virtual ~KinematicEngineTasks();
 
-	void addGroundContactConstraintTask(const KinematicEngineTask *task) {
-		m_tasks[KinematicEngineTasksTypes::TASK_LEVEL_GROUND_CONTACT_CONSTRAINT].push_back(task);
-	}
-
-	void addInternalConstraintTask(const KinematicEngineTask *task) {
-		m_tasks[KinematicEngineTasksTypes::TASK_LEVEL_INTERNAL_CONSTRAINT].push_back(task);
-	}
-
-	void addConstraintTask(const KinematicEngineTask *task) {
-		m_tasks[KinematicEngineTasksTypes::TASK_LEVEL_DYNAMICS_CONSTRAINT].push_back(task);
-	}
-
-	void addTask(const KinematicEngineTask *task) {
-		m_tasks[KinematicEngineTasksTypes::TASK_LEVEL_REGULAR].push_back(task);
+	void addTask(const KinematicEngineTask *task, uint level) {
+		m_tasks[level].push_back(task);
 	}
 
 	void addGravityTask(const KinematicEngineTask *task) {
@@ -72,9 +47,7 @@ public:
 	}
 
 	void clearTasks() {
-		for (std::vector<const KinematicEngineTask*>& tasks : m_tasks) {
-			tasks.clear();
-		}
+		m_tasks.clear();
 		m_gravityTasks.clear();
 	}
 

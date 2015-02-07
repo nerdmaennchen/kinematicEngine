@@ -6,24 +6,25 @@
  */
 
 #include "kinematicTree.h"
-#include "hardware/robot/motorIDs.h"
-#include "debugging/debug3d.h"
-#include "utils/utils.h"
 
-#include "services.h"
-#include "hardware/robot/robotModel.h"
-#include "hardware/robot/robotDescription.h"
+#include "robot/robotDescription.h"
 
 #include "node/kinematicNodeFactory.h"
 #include "node/kinematicNode.h"
 
+#include <iostream>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/foreach.hpp>
 #include <boost/optional/optional.hpp>
 
 
-KinematicTree::KinematicTree() {
+KinematicTree::KinematicTree()
+	: m_nodes()
+	, m_nodeToInt()
+	, m_nodeToExt()
+	, m_root(nullptr)
+{
 }
 
 KinematicTree::~KinematicTree() {
@@ -42,44 +43,48 @@ void KinematicTree::setup(const RobotDescription &robotDescription) {
 	// for each node, set the correct parent (this will auto-fill the children)
 	for (const auto& in : robotDescription.getNodes()) {
 		const KinematicNode* otherParentNode = robotDescription.getNodes().at(in.first)->getParent();
-		if (otherParentNode)
+		if (otherParentNode) {
 			m_nodes[in.first]->setParent( m_nodes[ otherParentNode->getID() ] );
-	}
-}
-
-void KinematicTree::setMotorValue(MotorID id, Degree value) {
-	m_nodes[id]->setValue(value.value());
-}
-
-void KinematicTree::setMotorValues(std::map<MotorID, Degree> const& values) {
-	for (auto e : values) {
-		m_nodes[e.first]->setValue(e.second.value());
-	}
-}
-
-void KinematicTree::getMotorValues(std::map<MotorID, Degree> & values) const {
-	for (auto node : m_nodes) {
-		if (!(node.second->isFixedNode())) {
-			values[node.first] = node.second->getValue() * degrees;
+		}
+		else {
+			m_root = m_nodes[in.first];
 		}
 	}
 }
 
-void KinematicTree::getMotorSpeeds(std::map<MotorID, RPM> & values) const {
+void KinematicTree::setMotorValue(MotorID id, double value) {
+	m_nodes[id]->setValue(value);
+}
+
+void KinematicTree::setMotorValues(std::map<MotorID, double> const& values) {
+	for (auto e : values) {
+		m_nodes[e.first]->setValue(e.second);
+	}
+}
+
+void KinematicTree::getMotorValues(std::map<MotorID, double> & values) const {
 	for (auto node : m_nodes) {
 		if (!(node.second->isFixedNode())) {
-			values[node.first] = node.second->getValueDerivative() * 60. / (2. * M_PI) * rounds_per_minute;
+			values[node.first] = node.second->getValue();
 		}
 	}
 }
 
-void KinematicTree::setMotorSpeed(MotorID id, RPM value) {
-	m_nodes[id]->setValueDerivative((2 * M_PI * value / 60.).value());
+void KinematicTree::getMotorSpeeds(std::map<MotorID, double> & values) const {
+	for (auto node : m_nodes) {
+		if (!(node.second->isFixedNode())) {
+			values[node.first] = node.second->getValueDerivative();
+		}
+	}
 }
 
-void KinematicTree::setMotorSpeeds(std::map<MotorID, RPM> const& values) {
+void KinematicTree::setMotorSpeed(MotorID id, double value) {
+	m_nodes[id]->setValueDerivative(value);
+}
+
+void KinematicTree::setMotorSpeeds(std::map<MotorID, double> const& values) {
 	for (auto e : values) {
-		m_nodes[e.first]->setValueDerivative((2. * M_PI * e.second / 60.).value());
+		m_nodes[e.first]->setValueDerivative(e.second);
 	}
 }
 
@@ -128,19 +133,19 @@ arma::mat44 KinematicTree::getTransitionMatrixFromTo(MotorID from, MotorID to) c
 	return ret;
 }
 /**
- * clip an angle to be applied to a motor (the values are defined in the robotdescription.xml)
+ * clip a value to be applied to a motor (the values are defined in the robotdescription.xml)
  * @param id
- * @param angle
- * @return clipped angle
+ * @param value
+ * @return clipped value
  */
-Degree KinematicTree::clipAngleForMotor(MotorID id, Degree angle) const
+double KinematicTree::clipValueForMotor(MotorID id, double value) const
 {
-	Degree clippedAngle = angle;
-	if (services.getRobotModel().getRobotDescription()->getMotorIDs().count(id) > 0) {
+	double clippedValue = value;
+	if (m_nodes.find(id) != m_nodes.end()) {
 		const KinematicNode *node = getNode(id);
-		clippedAngle = node->clipValue(angle.value()) * degrees;
+		clippedValue = node->clipValue(value);
 	}
-	return clippedAngle;
+	return clippedValue;
 }
 
 
@@ -223,7 +228,7 @@ KinematicPath KinematicTree::getPathFromNodeToNode(MotorID from, MotorID to) con
 			} else
 			{
 				/* this should not be executed anyway... */
-				ERROR("I have built an impossible kinematic path! there must be a bug in KinematicTree::getPathFromNodeToNode");
+				std::cerr << "I have built an impossible kinematic path! there must be a bug in KinematicTree::getPathFromNodeToNode" << std::endl;
 			}
 		}
 	}
@@ -231,64 +236,6 @@ KinematicPath KinematicTree::getPathFromNodeToNode(MotorID from, MotorID to) con
 	return fromNodes;
 }
 
-
-void KinematicTree::drawPose(DebugStream3D &debug3d, bool includeMasses, bool includeEquivalentMasses, bool drawCOM, bool drawGroundPlane) const {
-	const KinematicNode *rootNode = getNode(EFFECTOR_ID_ROOT);
-	if (nullptr == rootNode)
-		return;
-
-	arma::mat44 base = rootNode->getForwardMatrix();
-	arma::colvec3 position = base.submat(0, 3, 2, 3);
-	SETCOLORINDEX3D(EFFECTOR_ID_ROOT);
-	SPHERE3D(position(0), position(1), position(2), 0.003);
-
-	if (drawCOM)
-	{
-		KinematicMass com = getCOM(EFFECTOR_ID_ROOT);
-		const arma::colvec3 comPosition = com.m_position;
-		const arma::colvec3 linearMomentumVector = getLinearMomentum(EFFECTOR_ID_ROOT) * 0.00001;
-		const arma::colvec3 linearMomentumEnd = comPosition + linearMomentumVector;
-//		linearMomentumVector.print(); printf("\n\n");
-
-		SPHERE3D(comPosition(0), comPosition(1), comPosition(2), 0.00001 * com.m_massGrams);
-		LINE3D(comPosition(0), comPosition(1), comPosition(2), linearMomentumEnd(0), linearMomentumEnd(1), linearMomentumEnd(2));
-	}
-
-	if (includeMasses)
-	{
-		for (KinematicMass const &mass : rootNode->getMasses())
-		{
-			arma::colvec4 helper;
-			helper.rows(0, 2) = mass.m_position;
-			helper(3) = 1.;
-			arma::colvec4 position = base * helper;
-			SPHERE3D(position(0), position(1), position(2), 0.0001 * mass.m_massGrams);
-		}
-	}
-
-	if (includeEquivalentMasses)
-	{
-		arma::colvec4 helper;
-		helper.rows(0, 2) = rootNode->getEquivalentMass().m_position;
-		helper(3) = 1.;
-		arma::colvec4 position = base * helper;
-		SPHERE3D(position(0), position(1), position(2), 0.0001 * rootNode->getEquivalentMass().m_massGrams);
-	}
-
-	/* draw coordinate system */
-	for (int i = 0; i < 3; ++i)
-	{
-		SETCOLORINDEX3D(i + 1);
-		arma::colvec3 targetPos = base.col(i).rows(0, 2) * 0.05 + position;
-		LINE3D(position(0), position(1), position(2),
-				targetPos(0), targetPos(1), targetPos(2));
-	}
-
-	for (const KinematicNode *node : getNode(EFFECTOR_ID_ROOT)->getChildren())
-	{
-		drawPoseSub(debug3d, node, base, includeMasses, includeEquivalentMasses);
-	}
-}
 
 MotorID KinematicTree::getNodeID(const std::string &effectorName) const {
 	for (const auto &it : m_nodes) {
@@ -321,57 +268,9 @@ const KinematicNode* KinematicTree::getNode(MotorID id) const {
 }
 
 
-void KinematicTree::drawPoseSub(DebugStream3D &debug3d, const KinematicNode *baseNode, arma::mat44 prev, bool includeMasses, bool includeEquivalentMasses) const
-{
-	arma::mat44 base = prev * baseNode->getForwardMatrix();
-	arma::colvec3 position = base.submat(0, 3, 2, 3);
-	arma::colvec3 prevPosition = prev.submat(0, 3, 2, 3);
-
-
-	SETCOLORINDEX3D(baseNode->getID());
-	LINE3D(position(0), position(1), position(2),
-			prevPosition(0), prevPosition(1), prevPosition(2));
-//		SPHERE3D(position(0), position(1), position(2), 0.005);
-
-	if (includeMasses)
-	{
-		for (KinematicMass const &mass : baseNode->getMasses())
-		{
-			arma::colvec4 helper;
-			helper.rows(0, 2) = mass.m_position;
-			helper(3) = 1.;
-			arma::colvec4 position = base * helper;
-			SPHERE3D(position(0), position(1), position(2), 0.0001 * mass.m_massGrams);
-		}
-	}
-
-	if (includeEquivalentMasses)
-	{
-		arma::colvec4 helper;
-		helper.rows(0, 2) = baseNode->getEquivalentMass().m_position;
-		helper(3) = 1.;
-		arma::colvec4 position = base * helper;
-		SPHERE3D(position(0), position(1), position(2), 0.0001 * baseNode->getEquivalentMass().m_massGrams);
-	}
-
-	/* draw coordinate system */
-	for (int i = 0; i < 3; ++i)
-	{
-		SETCOLORINDEX3D(i + 1);
-		arma::colvec3 targetPos = base.col(i).rows(0, 2) * 0.05 + position;
-		LINE3D(position(0), position(1), position(2),
-				targetPos(0), targetPos(1), targetPos(2));
-	}
-
-	for (KinematicNode  const *node : baseNode->getChildren())
-	{
-		drawPoseSub(debug3d, node, base, includeMasses, includeEquivalentMasses);
-	}
-}
-
 KinematicMass KinematicTree::getCOM() const
 {
-	const KinematicNode *node = getNode(EFFECTOR_ID_ROOT);
+	const KinematicNode *node = m_root;
 	if (nullptr == node) {
 		return KinematicMass();
 	}
@@ -411,7 +310,7 @@ KinematicMass KinematicTree::getCOMSub(const KinematicNode *node, arma::mat44 pr
 
 KinematicMass KinematicTree::getCOM(MotorID node) const
 {
-	arma::mat44 nodeToRoot = getTransitionMatrixFromTo(node, EFFECTOR_ID_ROOT);
+	arma::mat44 nodeToRoot = getTransitionMatrixFromTo(node, m_root->getID());
 	arma::colvec4 comPos;
 	KinematicMass com = getCOM();
 	comPos.rows(0, 2) = com.m_position;
@@ -536,16 +435,5 @@ void KinematicTree::calculateEffectorsPositions(
 	for (const KinematicNode* const &child : node->getChildren()) {
 		calculateEffectorsPositions(positions, child, base);
 	}
-}
-
-void KinematicTree::setGyroscopeAngles(arma::mat33 _rotMat) {
-	std::map<MotorID, KinematicNode*>::iterator gyroIter = m_nodes.find(EFFECTOR_ID_GYROSCOPE);
-	if (gyroIter != m_nodes.end())
-	{
-		gyroIter->second->setAdditionalExtrinsicRotation(_rotMat);
-	} else {
-//		ERROR("Try setting extrinsic angles for gyroscope which is not present!");
-	}
-
 }
 

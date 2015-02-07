@@ -33,7 +33,7 @@ KinematicNodeWheel::KinematicNodeWheel(MotorID id,
 		Degree alphaX,
 		Degree alphaY,
 		Degree alphaZ)
-	: KinematicNodeRotation(id, parent, name, -360., 360., 0., maxForce, maxSpeed, translationX, translationY, translationZ, alphaX, alphaY, alphaZ)
+	: KinematicNodeRotation(id, parent, name, -360. * degrees, 360. * degrees, 0. * degrees, maxForce, maxSpeed, translationX, translationY, translationZ, alphaX, alphaY, alphaZ)
 	, m_rotationJoint(nullptr)
 	, m_motor(nullptr)
 {

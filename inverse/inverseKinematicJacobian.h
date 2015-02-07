@@ -24,27 +24,19 @@ public:
 
 	virtual double iterationStep(
 			KinematicTree const& tree
-			, std::map<MotorID, Degree>& o_angles
+			, std::map<MotorID, double>& o_values
 			, KinematicEngineTasksContainer const& tasks
 			, KinematicEngineConstraints const& constraints
 			, const KinematicEngineTaskDefaultPosition* idleTask = nullptr
-			, bool printDebugInfos = false
-		) const;
+		) const override;
 
-	virtual double calculateSpeeds(
+	double calculateSpeeds(
 			KinematicTree const& tree
-			, std::map<MotorID, RPM>& o_speeds
+			, std::map<MotorID, double>& o_speeds
 			, KinematicEngineTasksContainer const& tasks
 			, KinematicEngineConstraints const& constraints
 			, const KinematicEngineTaskDefaultPosition* idleTask = nullptr
-		) const;
-
-	virtual double iterationStepGravitation(
-			KinematicTree const& tree
-			, std::map<MotorID, double>& torques
-			, std::vector<const KinematicEngineTask*> const&
-		) const;
-
+		) const override;
 
 	void setEpsilon(double newEpsilon) {
 		m_epsilon = newEpsilon;

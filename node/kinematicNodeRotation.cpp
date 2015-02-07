@@ -16,9 +16,9 @@ KinematicNodeRotation::KinematicNodeRotation() : KinematicNode() {
 KinematicNodeRotation::KinematicNodeRotation(MotorID id,
 											KinematicNode *parent,
 											std::string name,
-											double minValue,
-											double maxValue,
-											double preferredValue,
+											Degree minValue,
+											Degree maxValue,
+											Degree preferredValue,
 											double maxForce,
 											RPM maxSpeed,
 											Millimeter translationX,
@@ -27,9 +27,20 @@ KinematicNodeRotation::KinematicNodeRotation(MotorID id,
 											Degree alphaX,
 											Degree alphaY,
 											Degree alphaZ)
-		: KinematicNode(id, parent, name, minValue, maxValue, preferredValue, translationX, translationY, translationZ, alphaX, alphaY, alphaZ)
+		: KinematicNode(id,
+						parent,
+						name,
+						Radian(minValue).value(),
+						Radian(maxValue).value(),
+						Radian(preferredValue).value(),
+						translationX,
+						translationY,
+						translationZ,
+						alphaX,
+						alphaY,
+						alphaZ)
 		, m_maxForce(maxForce)
-		, m_maxSpeed(maxSpeed)
+		, m_maxSpeed(maxSpeed.value() * 2. * M_PI / 60.)
 {
 	setValue(m_preferredValue);
 }
@@ -48,7 +59,7 @@ KinematicNodeRotation::~KinematicNodeRotation() {
 void KinematicNodeRotation::setValue(double newValue)
 {
 	m_value = newValue;
-	m_angle = newValue * degrees;
+	m_angle = newValue * radians;
 
 	arma::mat44 rotation = arma::eye(4, 4);
 	const double cRot = cos(m_angle);
@@ -151,7 +162,7 @@ dBodyID KinematicNodeRotation::attachToODE(PhysicsEnvironment *environment, dSpa
 	dJointSetHingeAnchor(m_rotationJoint, coordinateFrame(0, 3), coordinateFrame(1, 3), coordinateFrame(2, 3));
 	dJointSetHingeAxis(m_rotationJoint, coordinateFrame(0, 2), coordinateFrame(1, 2), coordinateFrame(2, 2));
 
-	m_hingeMotor = new ODEHingeMotor(id, m_rotationJoint, environment, this, m_maxForce, m_preferredValue * degrees, m_minValue * degrees, m_maxValue * degrees, m_maxSpeed);
+	m_hingeMotor = new ODEHingeMotor(id, m_rotationJoint, environment, this, m_maxForce, m_preferredValue, m_minValue, m_maxValue, m_maxSpeed);
 
 	// create a "box" to visualize the node and to have collision detection support
 	dGeomID geom = dCreateBox(visualSpaceID, 0.02, 0.01, 0.01);

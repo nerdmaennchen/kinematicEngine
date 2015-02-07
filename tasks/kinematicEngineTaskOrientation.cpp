@@ -5,8 +5,8 @@ w * kinematicEngineTaskOrientation.cpp
  *      Author: lutz
  */
 
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskOrientation.h>
-#include <tools/kinematicEngine/tasks/kinematicEngineTaskMethodPoint.h>
+#include "kinematicEngineTaskOrientation.h"
+#include "kinematicEngineTaskMethodPoint.h"
 
 KinematicEngineTaskOrientation::KinematicEngineTaskOrientation() : KinematicEngineTask(), m_axis(AXIS_X), m_referenceCoordinateSystem(MOTOR_NONE)
 {
@@ -56,7 +56,8 @@ arma::mat KinematicEngineTaskOrientation::getJacobianForTask(const KinematicTree
 		arma::colvec3 orientationOfNode = forward.col(m_axis);
 
 		if ((false == node->isFixedNode()) &&
-			(KinematicPathNode::Direction::LINK != m_invPath[pathIndex].m_direction))
+			(KinematicPathNode::Direction::LINK != m_invPath[pathIndex].m_direction) &&
+			(pathIndex < m_invPath.size() - 1))
 		{
 			arma::colvec3 partialDerivative = node->getPartialDerivativeOfOrientationToEffector(orientationOfNode);
 			if (KinematicPathNode::Direction::FROM_PARENT == m_invPath[pathIndex].m_direction)

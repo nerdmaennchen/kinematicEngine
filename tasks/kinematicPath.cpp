@@ -39,7 +39,7 @@ KinematicPath invertKinematicPath(const KinematicPath& path)
 			} else
 			{
 				/* this should not be executed anyway... */
-				ERROR("I have built an impossible kinematic path! there must be a bug in invertKinematicPath");
+				std::cerr << "I have built an impossible kinematic path! there must be a bug in invertKinematicPath" << std::endl;
 			}
 		}
 	}

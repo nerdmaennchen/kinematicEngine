@@ -13,18 +13,18 @@
 class ODEHingeMotor : public ODEMotor {
 
 public:
-	ODEHingeMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, Degree defaultAngle, Degree minAngle, Degree maxAngle, RPM maxSpeed, Degree complianceSlope, Degree compliangeMargin);
-	ODEHingeMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, Degree defaultAngle, Degree minAngle, Degree maxAngle, RPM maxSpeed);
+	ODEHingeMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, double defaultAngle, double minAngle, double maxAngle, double maxSpeed, double complianceSlope, double compliangeMargin);
+	ODEHingeMotor(MotorID motorID, dJointID jointID, PhysicsEnvironment *enviroment, KinematicNode* node, double maxNewtonmeter, double defaultAngle, double minAngle, double maxAngle, double maxSpeed);
 	virtual ~ODEHingeMotor();
 
-	virtual Degree getCurAngle() const;
-	virtual RPM getCurSpeed() const;
-	virtual void setDesiredAngleAndSpeed(Degree targetAngle, RPM targetSpeed);
-	virtual void setDesiredAngle(Degree targetAngle);
-	virtual void setDesiredSpeed(RPM targetSpeed);
+	virtual double getCurValue() const;
+	virtual double getCurSpeed() const;
+	virtual void setDesiredValueAndSpeed(double targetValue, double targetSpeed);
+	virtual void setDesiredValue(double targetValue);
+	virtual void setDesiredSpeed(double targetSpeed);
 
-	virtual void   setAngleOffset(Degree offset);
-	virtual Degree getAngleOffset();
+	virtual void   setValueOffset(double offset);
+	virtual double getValueOffset();
 
 	virtual void enableMotor(bool enabled);
 
@@ -33,36 +33,36 @@ public:
 	/**
 	 * called from the simulation environment before each simulation step
 	 */
-	virtual void simulatorCallback(Second timeDelta);
+	virtual void simulatorCallback(double timeDelta);
 
 protected:
 
-	void updateJointForces(Second timeDelta);
+	void updateJointForces(double timeDelta);
 
 	double m_maxNewtonMeter;
 
-	Degree m_defaultAngle;
-	Degree m_zeroAngle;
-	Degree m_minAngle;
-	Degree m_maxAngle;
+	double m_defaultAngle;
+	double m_zeroAngle;
+	double m_minAngle;
+	double m_maxAngle;
 
-	RPM m_maxSpeed;
+	double m_maxSpeed;
 
-	Degree m_complianceSlope;
-	Degree m_complianceMargin;
+	double m_complianceSlope;
+	double m_complianceMargin;
 
 	double m_p, m_d;
 
 	dJointFeedback m_jointFeedback;
 
-	RPM m_maxSpeedToReachTarget;    // speed used to reach the target angle
+	double m_maxSpeedToReachTarget;    // speed used to reach the target angle
 
-	Degree m_targetAngle;
+	double m_targetAngle;
 
-	Degree m_angleOffset;
+	double m_angleOffset;
 
-	Degree removeOffset(Degree angle) const;
-	Degree addOffset(Degree angle) const;
+	double removeOffset(double angle) const;
+	double addOffset(double angle) const;
 };
 
 #endif /* ODEHINGEMOTOR_H_ */

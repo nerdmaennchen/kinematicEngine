@@ -22,7 +22,7 @@ public:
 		LINK,        // element to ignore in the chain (this element's neighboring elements in the path are this element's children)
 	};
 
-	KinematicPathNode() {};
+	KinematicPathNode() : m_node(nullptr), m_direction(Direction::BEGINNING) {};
 
 	KinematicPathNode(const KinematicNode *node, Direction direction) :
 		m_node(node),

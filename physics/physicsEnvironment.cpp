@@ -6,13 +6,10 @@
  */
 
 #include "physicsEnvironment.h"
-#include <utils/system/thread.h>
+#include <mutex>
 #include "ODEUserObject.h"
-#include "representations/motion/kinematicTree.h"
+#include "kinematicEngine/kinematicTree.h"
 #include "ODEMotor.h"
-
-#include "services.h"
-#include "hardware/robot/robotModel.h"
 
 
 static void nearCallback_wrapper (void *data, dGeomID o1, dGeomID o2);
@@ -26,7 +23,7 @@ public:
 	dHashSpace m_visualSpace;
 	dJointGroup m_contactJoints;
 	dPlane m_groundPlane;
-	CriticalSection m_cs;
+	std::mutex m_mutex;
 
 	PhysicsEnviromentPrivData() : m_world(), m_collisionSpace(), m_visualSpace(), m_groundPlane()
 	{
@@ -227,27 +224,27 @@ dWorldID PhysicsEnvironment::getWorldID()
 }
 
 
-void PhysicsEnvironment::simulateStep(Millisecond step)
+void PhysicsEnvironment::simulateStep(Second step)
 {
 	pauseSimulation();
-	m_privData->performStep(Second(step).value());
+	m_privData->performStep(step.value());
 
 	// call each callback after each step
 	for (PhysicsEnvironmentStepCallback *callback : m_stepCallbacks)
 	{
-		callback->simulatorCallback(Second(step));
+		callback->simulatorCallback(step.value());
 	}
 	unPauseSimulation();
 }
 
 void PhysicsEnvironment::pauseSimulation()
 {
-	m_privData->m_cs.enter();
+	m_privData->m_mutex.lock();
 }
 
 void PhysicsEnvironment::unPauseSimulation()
 {
-	m_privData->m_cs.leave();
+	m_privData->m_mutex.unlock();
 }
 
 

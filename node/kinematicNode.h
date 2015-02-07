@@ -11,10 +11,10 @@
 #include "kinematicVisual.h"
 #include "kinematicMass.h"
 
-#include "hardware/robot/motorIDs.h"
+#include "utils/motorIDs.h"
 
 #include "utils/units.h"
-#include "utils/math/Math.h"
+#include "utils/utils.h"
 
 #include <string>
 
@@ -89,7 +89,7 @@ public:
 
 	virtual double clipValue(double newValue) const
 	{
-		return Math::limited(newValue, m_minValue, m_maxValue);
+		return utils::limited(newValue, m_minValue, m_maxValue);
 	}
 
 	virtual double getMinValue() const {

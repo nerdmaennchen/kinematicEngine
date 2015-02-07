@@ -19,9 +19,9 @@ KinematicNodeParallelRotation::KinematicNodeParallelRotation()
 KinematicNodeParallelRotation::KinematicNodeParallelRotation(MotorID id,
 											KinematicNode *parent,
 											std::string name,
-											double minValue,
-											double maxValue,
-											double preferredValue,
+											Degree minValue,
+											Degree maxValue,
+											Degree preferredValue,
 											double maxForce,
 											RPM maxSpeed,
 											Millimeter translationX,
@@ -31,10 +31,21 @@ KinematicNodeParallelRotation::KinematicNodeParallelRotation(MotorID id,
 											Degree alphaY,
 											Degree alphaZ,
 											Millimeter limbLength)
-		: KinematicNode(id, parent, name, minValue, maxValue, preferredValue, translationX, translationY, translationZ, alphaX, alphaY, alphaZ)
+		: KinematicNode(id,
+						parent,
+						name,
+						Radian(minValue).value(),
+						Radian(maxValue).value(),
+						Radian(preferredValue).value(),
+						translationX,
+						translationY,
+						translationZ,
+						alphaX,
+						alphaY,
+						alphaZ)
 		, m_limbLength(limbLength)
 		, m_maxForce(maxForce)
-		, m_maxSpeed(maxSpeed)
+		, m_maxSpeed(maxSpeed.value() * 2. * M_PI / 60.)
 {
 	setValue(m_preferredValue);
 }
@@ -60,7 +71,7 @@ void KinematicNodeParallelRotation::setValue(double newValue)
 {
 	m_value = newValue;
 	arma::mat44 rotation = arma::eye(4, 4);
-	m_angle = newValue * degrees;
+	m_angle = newValue * radians;
 	const double cRot = cos(m_angle);
 	const double sRot = sin(m_angle);
 
@@ -201,33 +212,14 @@ dBodyID KinematicNodeParallelRotation::attachToODE(PhysicsEnvironment *environme
 	dJointSetHingeAxis(m_activeRotationJointPre, coordinateFrame(0, 2), coordinateFrame(1, 2), coordinateFrame(2, 2));
 	dJointSetHingeAxis(m_activeRotationJointPost, coordinateFramePost(0, 2), coordinateFramePost(1, 2), coordinateFramePost(2, 2));
 
-
-//	INFO("CoordinateFrame");
-//	coordinateFrame.print();
-//	INFO("\nCoordinateFramePost")
-//	coordinateFramePost.print();
-//	INFO("\n");
-//
-//	INFO("intermediateBodyPosition");
-//	((coordinateFrame + coordinateFramePost) * 0.5).print();
-//	INFO("\n");
-//
-//
-//	INFO("CoordinateFrameOffset");
-//	coordinateFrameOffset.print();
-//	INFO("\nCoordinateFrameOffsetPost")
-//	coordinateFrameOffsetPost.print();
-//	INFO("\n");
-
-
 	dJointSetHingeAnchor(m_passiveRotationJointPre,  coordinateFrameOffset(0, 3), coordinateFrameOffset(1, 3), coordinateFrameOffset(2, 3));
 	dJointSetHingeAnchor(m_passiveRotationJointPost, coordinateFramePostOffset(0, 3), coordinateFramePostOffset(1, 3), coordinateFramePostOffset(2, 3));
 
 	dJointSetHingeAxis(m_passiveRotationJointPre, coordinateFrameOffset(0, 2), coordinateFrameOffset(1, 2), coordinateFrameOffset(2, 2));
 	dJointSetHingeAxis(m_passiveRotationJointPost, coordinateFramePostOffset(0, 2), coordinateFramePostOffset(1, 2), coordinateFramePostOffset(2, 2));
 
-	m_odeMotor = new ODEParallelMotor(id, m_activeRotationJointPre, environment, this, m_maxForce, m_preferredValue * degrees, m_minValue * degrees, m_maxValue * degrees, m_maxSpeed);
-	m_odeMotor->setAngleOffset(m_value * degrees);
+	m_odeMotor = new ODEParallelMotor(id, m_activeRotationJointPre, environment, this, m_maxForce, m_preferredValue, m_minValue, m_maxValue, m_maxSpeed);
+	m_odeMotor->setValueOffset(m_value);
 
 	// finally add all the visuals
 	// the visuals are defined as "local" coordinates but here we need to incorporate the body offset
