@@ -7,7 +7,6 @@
 
 #include "physicsVisualization.h"
 #include <thread>
-#include <moduleMessenger/moduleMessenger.h>
 
 #include <drawstuff/drawstuff.h>
 
@@ -63,7 +62,7 @@ static void start()
 }
 static void stop()
 {
-	moduleMessenger::postMessage(bool(false));
+	exit(0);
 }
 
 
