@@ -11,15 +11,16 @@
 namespace kinematicEngine {
 
 class TaskCOMWholeRobot : public Task {
+	typedef kinematics::NodeID NodeID;
 public:
 
 	typedef int SubDimension;
 
 	TaskCOMWholeRobot();
 
-	TaskCOMWholeRobot(std::string name, MotorID base, KinematicTree const &tree);
+	TaskCOMWholeRobot(std::string name, NodeID base, KinematicTree const &tree);
 
-	TaskCOMWholeRobot(std::string name, MotorID base, MotorID reference, KinematicTree const &tree);
+	TaskCOMWholeRobot(std::string name, NodeID base, NodeID reference, KinematicTree const &tree);
 
 	virtual ~TaskCOMWholeRobot();
 
@@ -36,7 +37,7 @@ public:
 	virtual arma::mat getJacobianForTask(const KinematicTree &kinematicTree, arma::mat &jacobianWithoutRemovedDOFs, bool normJacobian = false) const;
 
 private:
-	MotorID m_referenceCoordinateSystem;
+	NodeID m_referenceCoordinateSystem;
 
 	arma::mat getJacobianForTaskSub(const KinematicTree &kinematicTree,
 			const KinematicNode *node,

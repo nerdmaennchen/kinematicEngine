@@ -28,6 +28,13 @@ arma::colvec const& TaskMethodLine::getTarget() const
 
 void TaskMethodLine::setLineParams(arma::colvec3 direction, arma::colvec3 position)
 {
+	const double normDirection = arma::norm(direction, 2);
+	if (normDirection > 0.000000001) {
+		direction = direction * 1. / normDirection;
+	} else {
+		direction = arma::colvec({0, 0, 1});
+	}
+
 	const arma::colvec3 XAxis = arma::colvec({1, 0, 0});
 	const arma::colvec3 YAxis = arma::colvec({0, 1, 0});
 	const arma::colvec3 ZAxis = arma::colvec({0, 0, 1});
@@ -49,7 +56,7 @@ void TaskMethodLine::setLineParams(arma::colvec3 direction, arma::colvec3 positi
 	arma::colvec helperZ = arma::cross(direction, helperDir);
 	arma::colvec helperY = arma::cross(helperZ, direction);
 
-	direction = direction * 1. / arma::norm(direction, 2);
+
 	helperY = helperY * 1. / arma::norm(helperY, 2);
 	helperZ = helperZ * 1. / arma::norm(helperZ, 2);
 

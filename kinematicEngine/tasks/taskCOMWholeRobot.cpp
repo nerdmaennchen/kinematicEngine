@@ -12,13 +12,13 @@ TaskCOMWholeRobot::TaskCOMWholeRobot()
 {
 }
 
-TaskCOMWholeRobot::TaskCOMWholeRobot(std::string name, MotorID base, KinematicTree const &tree)
+TaskCOMWholeRobot::TaskCOMWholeRobot(std::string name, NodeID base, KinematicTree const &tree)
 	: Task(name, base, MOTOR_NONE, tree)
 	, m_referenceCoordinateSystem(base)
 {
 }
 
-TaskCOMWholeRobot::TaskCOMWholeRobot(std::string name, MotorID base, MotorID reference, KinematicTree const &tree)
+TaskCOMWholeRobot::TaskCOMWholeRobot(std::string name, NodeID base, NodeID reference, KinematicTree const &tree)
 	: Task(name, base, MOTOR_NONE, tree)
 	, m_referenceCoordinateSystem(reference)
 {
@@ -109,9 +109,9 @@ arma::mat TaskCOMWholeRobot::getJacobianForTaskSub(const KinematicTree &kinemati
 		massmovedByNode += node->getEquivalentMass();
 
 		if (!node->isFixedNode()) {
-			kinematics::JacobianValues momentumDerivative = node->getPartialDerivativeOfLocationToEffector(attachedNodesMass.m_position);
+			kinematics::JacobianValues momentumDerivative = node->getPartialDerivativeOfLocationToEffector(massmovedByNode.m_position);
 			for (kinematics::JacobianValue const& val : momentumDerivative) {
-				retJacobian.col(val.first) = val.second * attachedNodesMass.m_massGrams / 1000.;
+				retJacobian.col(val.first) = val.second * massmovedByNode.m_massGrams / 1000.;
 			}
 		}
 

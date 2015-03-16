@@ -15,7 +15,7 @@
 #include "kinematicEngine/tasks/task.h"
 #include "kinematicEngine/tasks/taskDefaultPosition.h"
 
-#include "kinematicEngine/utils/motorIDs.h"
+#include "kinematicEngine/kinematics.h"
 
 namespace kinematicEngine {
 
@@ -48,11 +48,11 @@ public:
 			, const TaskDefaultPosition* idleTask = nullptr
 		) const = 0;
 
-//	virtual double iterationStepGravitation(
-//			KinematicTree const& tree
-//			, std::map<MotorID, double>& torques
-//			, std::vector<const Task*> const&
-//		) const = 0;
+	virtual double iterationStepGravitation(
+			KinematicTree const& tree
+			, std::map<MotorID, double>& torques
+			, Task const& task
+		) const = 0;
 
 protected:
 	/**

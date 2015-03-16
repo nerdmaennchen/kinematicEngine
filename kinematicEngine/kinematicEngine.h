@@ -36,11 +36,17 @@ public:
 												Constraints const& constraints,
 												int iterationCnt, double& error);
 
+	std::map<MotorID, double> solveIKGravityOvershoot(kinematics::MotorValuesMap curValues,
+												kinematics::MotorValuesMap curSpeeds,
+												Tasks& tasks,
+												kinematicEngine::Task& task,
+												double& error);
 	void setEpsilon(double epsilon);
 	void setSpeedEpsilon(double epsilon);
 	void setNullspaceEpsilon(double epsilon);
 	void setMaxValueChange(double maxValueChange);
 	void setValueNoise(double valueNoise);
+	void setOvershootValues(kinematics::MotorValuesMap overshootValues);
 
 	KinematicTree const& getKinematicTree() const
 	{
@@ -83,6 +89,12 @@ private:
 	 * at each solveIKStep call some noise is added to the current values to "hop" out of singular configurations
 	 */
 	double m_valueNoise;
+
+	/**
+	 * paramter for overshoot generation
+	 * motor values are overshot when they act against gravity
+	 */
+	kinematics::MotorValuesMap m_overshootValues;
 
 	void fillTreeWithValues(KinematicTree &tree,
 							kinematics::MotorValuesMap values,

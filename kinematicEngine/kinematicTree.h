@@ -14,7 +14,7 @@
 #include "kinematicEngine/tasks/kinematicPath.h"
 
 #include "kinematicEngine/robotDescription.h"
-#include "kinematicEngine/utils/motorIDs.h"
+#include "kinematicEngine/kinematics.h"
 
 #include <boost/property_tree/ptree.hpp>
 

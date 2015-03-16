@@ -28,7 +28,12 @@ arma::colvec const& TaskMethodPlane::getTarget() const
 
 void TaskMethodPlane::setPlaneParams(arma::colvec3 normalVec, arma::colvec3 supportPoint)
 {
-	normalVec = normalVec * 1. / arma::norm(normalVec, 2);
+	const double normLen = arma::norm(normalVec, 2);
+	if (normLen > 0.000000001) {
+		normalVec = normalVec * 1. / normLen;
+	} else {
+		normalVec = arma::colvec({0, 0, 1});
+	}
 
 	m_transform = arma::zeros(1, 3);
 	m_transform.row(0) = normalVec.t();

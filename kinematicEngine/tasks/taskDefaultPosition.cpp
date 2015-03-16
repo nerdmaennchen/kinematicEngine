@@ -23,9 +23,12 @@ void TaskDefaultPosition::setDefaultValues(KinematicTree const& tree, kinematics
 
 	std::map<kinematics::NodeID, KinematicNode*> const& nodes = tree.getNodes();
 	for (std::pair<kinematics::NodeID, KinematicNode*> const node : nodes) {
-		kinematics::Motor2IntMap const& m2iMap = node.second->getMotor2IntMap();
-		for (kinematics::Motor2Int const& m2i : m2iMap) {
-			m_defaultValues(m2i.second) = defaultValues[m2i.first];
+		if (node.second->isServo()) {
+			kinematics::Motor2IntMap const& m2iMap = node.second->getMotor2IntMap();
+			node.second->clipValues(defaultValues);
+			for (kinematics::Motor2Int const& m2i : m2iMap) {
+				m_defaultValues(m2i.second) = defaultValues[m2i.first];
+			}
 		}
 	}
 }
@@ -38,11 +41,13 @@ arma::colvec TaskDefaultPosition::getErrors(KinematicTree const& tree) const
 
 	std::map<kinematics::NodeID, KinematicNode*> const& nodes = tree.getNodes();
 	for (std::pair<kinematics::NodeID, KinematicNode*> const node : nodes) {
-		kinematics::Motor2IntMap const& m2iMap = node.second->getMotor2IntMap();
-		kinematics::MotorValuesMap const& nodesValues = node.second->getValues();
+		if (node.second->isServo()) {
+			kinematics::Motor2IntMap const& m2iMap = node.second->getMotor2IntMap();
+			kinematics::MotorValuesMap const& nodesValues = node.second->getValues();
 
-		for (kinematics::Motor2Int const& m2i : m2iMap) {
-			curValues(m2i.second) = nodesValues.at(m2i.first);
+			for (kinematics::Motor2Int const& m2i : m2iMap) {
+				curValues(m2i.second) = nodesValues.at(m2i.first);
+			}
 		}
 	}
 

@@ -11,7 +11,7 @@
 #include "visuals/kinematicVisual.h"
 #include "kinematicMass.h"
 
-#include "kinematicEngine/utils/motorIDs.h"
+#include "kinematicEngine/kinematics.h"
 
 #include "utils/units.h"
 #include "kinematicEngine/utils/utils.h"
@@ -30,23 +30,6 @@ namespace kinematicEngine {
  * this represents something movable
  */
 
-namespace kinematics {
-	typedef uint NodeID;
-
-	typedef std::map<MotorID, double> MotorValuesMap;
-	typedef std::pair<MotorID, double> MotorValuesMapEntry;
-
-	typedef std::vector<MotorID> MotorIDs;
-
-	typedef std::pair<MotorID, uint> Motor2Int;
-	typedef std::map<MotorID, uint> Motor2IntMap;
-
-	typedef std::pair<uint, MotorID> Int2Motor;
-	typedef std::map<uint, MotorID> Int2MotorMap;
-
-	typedef std::pair<uint, arma::colvec3> JacobianValue;
-	typedef std::vector<std::pair<uint, arma::colvec3> > JacobianValues;
-}
 
 class KinematicNode {
 protected:

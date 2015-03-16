@@ -40,6 +40,12 @@ public:
 			, const TaskDefaultPosition* idleTask = nullptr
 		) const override;
 
+	double iterationStepGravitation(
+			KinematicTree const& tree
+			, std::map<MotorID, double>& torques
+			, Task const& task
+		) const override;
+
 	void setEpsilon(double newEpsilon) {
 		m_epsilon = newEpsilon;
 	}

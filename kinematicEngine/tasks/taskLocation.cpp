@@ -13,20 +13,20 @@ TaskLocation::TaskLocation() : Task()
 {
 }
 
-TaskLocation::TaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, const KinematicTree &tree)
+TaskLocation::TaskLocation(std::string name, NodeID baseNode, NodeID effectorNode, const KinematicTree &tree)
 	: Task(name, baseNode, effectorNode, tree)
 	, m_referenceCoordinateSystem(baseNode)
 {
 }
 
-TaskLocation::TaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, MotorID referenceNode, const KinematicTree &tree)
+TaskLocation::TaskLocation(std::string name, NodeID baseNode, NodeID effectorNode, NodeID referenceNode, const KinematicTree &tree)
 	: Task(name, baseNode, effectorNode, tree)
 	, m_referenceCoordinateSystem(referenceNode)
 {
 
 }
 
-TaskLocation::TaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, const KinematicTree &tree, TaskMethod *method)
+TaskLocation::TaskLocation(std::string name, NodeID baseNode, NodeID effectorNode, const KinematicTree &tree, TaskMethod *method)
 	: Task(name, baseNode, effectorNode, tree, method)
 	, m_referenceCoordinateSystem(baseNode)
 {
@@ -104,7 +104,7 @@ arma::colvec TaskLocation::getError(const KinematicTree &kinematicTree) const {
 	/* calculate the position of the effector */
 	const arma::mat44 transition = kinematicTree.getTransitionMatrixFromTo(m_baseNode, m_effectorNode);
 	const arma::mat44 transition2 = kinematicTree.getTransitionMatrixFromTo(m_referenceCoordinateSystem, m_baseNode);
-	arma::colvec3 value = m_method->getTransform() * (transition2.submat(0, 0, 2, 2) * transition.col(3).rows(0, 2));
+	arma::colvec value = m_method->getTransform() * (transition2.submat(0, 0, 2, 2) * transition.col(3).rows(0, 2));
 
 	arma::colvec target = m_method->getTarget();
 	double norm = arma::norm((target - value), 2);

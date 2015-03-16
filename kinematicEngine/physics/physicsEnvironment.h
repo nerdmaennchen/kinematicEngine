@@ -12,7 +12,7 @@
 
 #include <ode/ode.h>
 #include "utils/units.h"
-#include "kinematicEngine/utils/motorIDs.h"
+#include "kinematicEngine/kinematics.h"
 
 namespace kinematicEngine {
 

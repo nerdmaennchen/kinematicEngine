@@ -22,18 +22,11 @@
 #include "kinematicNodeParallelRotation.h"
 #include "kinematicNodeDummy.h"
 #include "kinematicNodeFixed.h"
+#include "kinematicNodePen.h"
 
 #include <iostream>
 
 namespace kinematicEngine {
-
-enum class KinematicNodeType  {
-	KINEMATIC_NODE_TYPE_DUMMY,
-	KINEMATIC_NODE_TYPE_ROTATION,
-	KINEMATIC_NODE_PARALLEL_TYPE_ROTATION,
-	KINEMATIC_NODE_TYPE_PRISMATIC,
-	KINEMATIC_NODE_TYPE_OMNIWHEEL
-};
 
 class KinematicNodeFactoryPrivClass {
 public:
@@ -203,6 +196,33 @@ public:
 		return node;
 	}
 
+	KinematicNodeDummy *generatePenNode(boost::property_tree::ptree::value_type &ptree, kinematics::NodeID nodeID, uint intID) const {
+		MotorID id = MotorID(0);
+		std::string name = "";
+		Millimeter translationX = 0 * millimeters;
+		Millimeter translationY = 0 * millimeters;
+		Millimeter translationZ = 0 * millimeters;
+		Degree alphaX = 0 * degrees;
+		Degree alphaY = 0 * degrees;
+		Degree alphaZ = 0 * degrees;
+		double defaultValue = 0.;
+		double minValue = 0.;
+		double maxValue = 0.;
+		double maxForce = 0.;
+		double maxSpeed = 0.;
+		assembleAttrs(ptree, id, name, translationX, translationY, translationZ, alphaX, alphaY, alphaZ, defaultValue, minValue, maxValue, maxForce, maxSpeed);
+
+		KinematicNodePen *node = new KinematicNodePen(nullptr, name, translationX, translationY, translationZ, alphaX, alphaY, alphaZ);
+
+		node->setID(nodeID);
+		node->setMaxValues({{id, maxValue}});
+		node->setMinValues({{id, minValue}});
+		node->setPreferedValues({{id, defaultValue}});
+		node->setValues({{id, defaultValue}});
+		node->setMotor2IntMap({{id, intID}});
+		return node;
+	}
+
 	KinematicNodeDummy *generateDummyNode(boost::property_tree::ptree::value_type &ptree, kinematics::NodeID nodeID) const {
 		MotorID id = MotorID(0);
 		std::string name = "";
@@ -347,25 +367,28 @@ KinematicNode* KinematicNodeFactory::createNodeFromPTree(boost::property_tree::p
 	}  else if (typeName == "rotation")
 	{
 		kinematicNode = nodeBuilder.generateRotationNode(ptree, m_nodeIDCounter, m_intIDCounter);
-		++m_intIDCounter;
 	} else if (typeName == "parallelrotation")
 	{
 		kinematicNode = nodeBuilder.generateParallelRotationNode(ptree, m_nodeIDCounter, m_intIDCounter);
-		++m_intIDCounter;
 	} else if (typeName == "fixed")
 	{
 		kinematicNode = nodeBuilder.generateFixedNode(ptree, m_nodeIDCounter);
 	} else if (typeName == "wheel")
 	{
 		kinematicNode = nodeBuilder.generateWheelNode(ptree, m_nodeIDCounter, m_intIDCounter);
-		++m_intIDCounter;
 	} else if (typeName == "propeller")
 	{
 		kinematicNode = nodeBuilder.generatePropellerNode(ptree, m_nodeIDCounter, m_intIDCounter);
-		++m_intIDCounter;
+	} else if (typeName == "pen")
+	{
+		kinematicNode = nodeBuilder.generatePenNode(ptree, m_nodeIDCounter, m_intIDCounter);
 	} else if (typeName == "piston")
 	{
 		// TODO
+	}
+
+	if (kinematicNode->isServo()) {
+		++m_intIDCounter;
 	}
 
 	++m_nodeIDCounter;

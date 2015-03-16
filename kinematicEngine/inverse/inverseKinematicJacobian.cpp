@@ -33,6 +33,7 @@ double InverseKinematicJacobian::iterationStep(
 		, const TaskDefaultPosition* idleTask
 	) const
 {
+    std::cout << "\x1B[2J\x1B[H";
 	double totalError = 0;
 	const uint motorCnt = tree.getMotorCnt();
 
@@ -40,38 +41,37 @@ double InverseKinematicJacobian::iterationStep(
 	std::map<NodeID, KinematicNode*> const& nodes = tree.getNodes();
 
 	for (std::pair<NodeID, KinematicNode*> const& node : nodes) {
-		kinematics::Motor2IntMap const& motor2Int = node.second->getMotor2IntMap();
-		MotorValuesMap const& values = node.second->getValues();
+		if (node.second->isServo())
+		{
+			kinematics::Motor2IntMap const& motor2Int = node.second->getMotor2IntMap();
+			MotorValuesMap const& values = node.second->getValues();
 
-		for (std::pair<MotorID, double> const& value : values) {
-			motorValuesVec(motor2Int.at(value.first)) = value.second;
+			for (std::pair<MotorID, double> const& value : values) {
+				motorValuesVec(motor2Int.at(value.first)) = value.second;
+			}
 		}
 	}
 
 	arma::colvec summedJointAngleDiffs = arma::zeros(motorCnt);
 	arma::mat nullspaceEyeMat = arma::eye(motorCnt, motorCnt);
-	arma::mat nullspaceMat = arma::zeros(motorCnt, motorCnt);
+	arma::mat nullspaceMat = nullspaceEyeMat;
 
 	arma::mat bigJacobian;
-	arma::colvec bigErrorVector;
 	for (std::pair<uint, std::vector<const Task*>> const& group : alltasks) {
 		std::vector<const Task*> const& tasks = group.second;
 
 		if (tasks.size() > 0) {
-			const arma::mat dofMat = nullspaceEyeMat - nullspaceMat;
 			arma::mat jacobianRAW;
 			const arma::mat jacobian = getJacobianForTasks(tree, tasks, jacobianRAW, false);
-			arma::mat jacobianDOF = jacobian * arma::diagmat(dofMat);
 
-			arma::colvec errorVec = getErrorForTasks(tree, tasks);
+			const arma::colvec errorVec = getErrorForTasks(tree, tasks);
 
-			arma::mat pseudoInverseJacobian = buildPseudoInverse(jacobianDOF, m_epsilon);
+			const arma::mat pseudoInverseJacobian = buildPseudoInverse(jacobian, m_speedEpsilon);
 
 			const arma::colvec jointDiffs = pseudoInverseJacobian * errorVec;
-			const arma::colvec jointDiffsDecorr = dofMat * jointDiffs;
+			const arma::colvec jointDiffsDecorr = nullspaceMat * jointDiffs;
 
-			const arma::colvec preliminaryJointDiffs = summedJointAngleDiffs + jointDiffsDecorr;
-			const arma::colvec preliminaryJointAngles = motorValuesVec + preliminaryJointDiffs;
+			const arma::colvec preliminaryJointAngles = motorValuesVec + summedJointAngleDiffs + jointDiffsDecorr;
 			arma::colvec jointDiffConstraintError = arma::zeros(motorCnt);
 			arma::colvec correctedJointAngleDiffs = jointDiffsDecorr;
 
@@ -81,7 +81,7 @@ double InverseKinematicJacobian::iterationStep(
 
 			// correct the constraint error
 			for (uint i(0); i < motorCnt; ++i) {
-				const double factor = dofMat(i, i);
+				const double factor = nullspaceMat(i, i);
 				if (factor > m_nullspaceEpsilon) {
 					jointDiffConstraintError(i) = jointDiffConstraintError(i) / factor;
 				} else {
@@ -89,18 +89,30 @@ double InverseKinematicJacobian::iterationStep(
 				}
 			}
 
-			correctedJointAngleDiffs += dofMat * jointDiffConstraintError;
+			correctedJointAngleDiffs += nullspaceMat * jointDiffConstraintError;
 
 			summedJointAngleDiffs += correctedJointAngleDiffs;
 
-			nullspaceMat += dofMat * (buildPseudoInverse(jacobianRAW, m_nullspaceEpsilon) * jacobianRAW);
+			bigJacobian = arma::join_cols(bigJacobian, jacobianRAW);
+			nullspaceMat = nullspaceEyeMat - buildPseudoInverse(bigJacobian, m_nullspaceEpsilon) * bigJacobian;
+
 			totalError += arma::dot(errorVec, errorVec);
 
-//			std::cout.precision(3);
-//			std::cout << std::fixed << std::setw(7);
-//			jacobian.raw_print(std::cout); printf("\n");
-//			summedJointAngleDiffs.t().raw_print(std::cout); printf("\n");
-//			errorVec.t().raw_print(std::cout); printf("\n");
+//			std::cout << "level " << group.first << std::endl;
+//			std::cout.precision(7);
+//			std::cout << std::fixed << std::setw(12);
+//			bigJacobian.raw_print(std::cout, "bigJacobian = ["); printf("]\n");
+//			jacobian.raw_print(std::cout, std::string("jacobian") + std::to_string(group.first) + " = ["); printf("]\n");
+//			bigJacobian.raw_print(std::cout, std::string("bigJacobian") + std::to_string(group.first) + " = ["); printf("]\n");
+//			jacobianDOF.raw_print(std::cout, "jacobianDOF = ["); printf("]\n");
+//			arma::mat(jacobian * dofMat).raw_print(std::cout, "jacobianDOF2 = ["); printf("]\n");
+//			jointDiffs.t().raw_print(std::cout, std::string("jointDiffs") + std::to_string(group.first) + " = ["); printf("]\n");
+//			jointDiffsDecorr.t().raw_print(std::cout, std::string("jointDiffsDecorr") + std::to_string(group.first) + " = ["); printf("]\n");
+//			summedJointAngleDiffs.t().raw_print(std::cout, "summedJointAngleDiffs = ["); printf("]\n");
+//			jointDiffConstraintError.t().raw_print(std::cout, "jointDiffConstraintError = ["); printf("]\n");
+//			correctedJointAngleDiffs.t().raw_print(std::cout, "correctedJointAngleDiffs = ["); printf("]\n");
+//			errorVec.t().raw_print(std::cout, std::string("errorVec") + std::to_string(group.first) + " = ["); printf("]'\n");
+//			nullspaceMat.raw_print(std::cout, "nullspaceMat = ["); printf("]\n");
 //			std::cout << arma::norm(errorVec, 2) << std::endl;
 //			printf("\n");
 		}
@@ -110,7 +122,6 @@ double InverseKinematicJacobian::iterationStep(
 		arma::mat helper = arma::mat(nullspaceEyeMat - nullspaceMat);
 		arma::colvec errorVec = idleTask->getErrors(tree);
 		arma::colvec angleDiffVec = ((nullspaceEyeMat - nullspaceMat) * errorVec);
-
 		summedJointAngleDiffs += angleDiffVec;
 	}
 
@@ -122,20 +133,23 @@ double InverseKinematicJacobian::iterationStep(
 	motorValuesVec += summedJointAngleDiffs;
 
 	for (std::pair<NodeID, KinematicNode*> const& node : nodes) {
-		kinematics::Int2MotorMap const& int2MotorMap = node.second->getInt2MotorMap();
-		kinematics::MotorIDs const& motors = node.second->getMotors();
-		MotorValuesMap newValues;
+		if (node.second->isServo())
+		{
+			kinematics::Int2MotorMap const& int2MotorMap = node.second->getInt2MotorMap();
+			kinematics::MotorIDs const& motors = node.second->getMotors();
+			MotorValuesMap newValues;
 
-		for (kinematics::Int2Motor const& i2m : int2MotorMap) {
-			newValues[i2m.second] = motorValuesVec(i2m.first);
-		}
+			for (kinematics::Int2Motor const& i2m : int2MotorMap) {
+				newValues[i2m.second] = motorValuesVec(i2m.first);
+			}
 
-		/* clip values */
-		newValues = node.second->clipValues(newValues);
+			/* clip values */
+			newValues = node.second->clipValues(newValues);
 
-		/* export */
-		for (MotorID const& motor : motors) {
-			o_values[motor] = newValues[motor];
+			/* export */
+			for (MotorID const& motor : motors) {
+				o_values[motor] = newValues[motor];
+			}
 		}
 	}
 
@@ -159,15 +173,18 @@ double InverseKinematicJacobian::calculateSpeeds(
 	std::map<NodeID, KinematicNode*> const& nodes = tree.getNodes();
 
 	for (std::pair<NodeID, KinematicNode*> const& node : nodes) {
-		kinematics::Motor2IntMap const& motor2Int = node.second->getMotor2IntMap();
-		MotorValuesMap const& values = node.second->getValues();
-		MotorValuesMap const& valueDerivatives = node.second->getValueDerivatives();
+		if (node.second->isServo())
+		{
+			kinematics::Motor2IntMap const& motor2Int = node.second->getMotor2IntMap();
+			MotorValuesMap const& values = node.second->getValues();
+			MotorValuesMap const& valueDerivatives = node.second->getValueDerivatives();
 
-		for (std::pair<MotorID, double> const& value : values) {
-			motorValuesVec(motor2Int.at(value.first)) = value.second;
-		}
-		for (std::pair<MotorID, double> const& value : valueDerivatives) {
-			motorSpeedsVec(motor2Int.at(value.first)) = value.second;
+			for (std::pair<MotorID, double> const& value : values) {
+				motorValuesVec(motor2Int.at(value.first)) = value.second;
+			}
+			for (std::pair<MotorID, double> const& value : valueDerivatives) {
+				motorSpeedsVec(motor2Int.at(value.first)) = value.second;
+			}
 		}
 	}
 
@@ -178,18 +195,17 @@ double InverseKinematicJacobian::calculateSpeeds(
 
 	arma::colvec summedJointSpeedDiffs = arma::zeros(motorCnt);
 	arma::mat nullspaceEyeMat = arma::eye(motorCnt, motorCnt);
-	arma::mat nullspaceMat = jointDiffConstraintError * jointDiffConstraintError.t(); //arma::zeros(motorCnt, motorCnt);
+	arma::mat nullspaceMat = nullspaceEyeMat - jointDiffConstraintError * jointDiffConstraintError.t();
 
 	arma::mat bigJacobian;
 	for (std::pair<uint, std::vector<const Task*>> const& group : tasks) {
 		std::vector<const Task*> const& _tasks = group.second;
 
 		if (_tasks.size() > 0) {
-			arma::mat dofMat = nullspaceEyeMat - nullspaceMat;
-
 			arma::mat jacobianRAW;
 			arma::mat jacobian = getJacobianForTasks(tree, _tasks, jacobianRAW, false);
-			arma::mat jacobianDOF = jacobian * arma::diagmat(dofMat);
+
+			const arma::mat pseudoInverseJacobian = buildPseudoInverse(jacobian, m_speedEpsilon);
 
 			// how much "error" (mother function)
 			arma::colvec speedTarget = getSpeedTargetForTasks(tree, _tasks);
@@ -197,22 +213,29 @@ double InverseKinematicJacobian::calculateSpeeds(
 			// how fast does the target move
 			arma::colvec speedVec = jacobian * motorSpeedsVec;
 
+
 			// the actual error
 			arma::colvec speedError = speedTarget - speedVec;
 
-//			const arma::colvec jointDiffs = arma::mat(jacobian * dofMat).t() * speedError;
-			const arma::colvec jointDiffs = dofMat * buildPseudoInverse(jacobianDOF, m_speedEpsilon) * speedError;
+			const arma::colvec jointDiffs = nullspaceMat * pseudoInverseJacobian * speedError;
 
 			summedJointSpeedDiffs += jointDiffs;
-			nullspaceMat += dofMat * (buildPseudoInverse(jacobianRAW, m_nullspaceEpsilon) * jacobianRAW);
+
+			bigJacobian = arma::join_cols(bigJacobian, jacobianRAW);
+//			nullspaceMat += dofMat * (buildPseudoInverse(jacobianRAW, m_nullspaceEpsilon) * jacobianRAW);
+			nullspaceMat = nullspaceEyeMat - buildPseudoInverse(bigJacobian, m_nullspaceEpsilon) * bigJacobian;
 			totalError += arma::dot(speedError, speedError);
 
+//			printf("level %d\n", group.first);
 //			std::cout.precision(3);
 //			std::cout << std::fixed << std::setw(7);
-//			jacobianDOF.raw_print(std::cout); printf("\n");
-//			buildPseudoInverse(jacobianDOF, m_speedEpsilon).raw_print(std::cout); printf("\n");
-//			summedJointSpeedDiffs.raw_print(std::cout); printf("\n");
-//			speedError.raw_print(std::cout); printf("\n");
+//			jacobian.raw_print(std::cout, "jacobian"); printf("\n");
+//			jacobianDOF.raw_print(std::cout, "jacobianDOF"); printf("\n");
+//			pseudoInverseJacobian.raw_print(std::cout, "pseudoInverseJacobianDOF"); printf("\n");
+//			buildPseudoInverse(jacobian, m_speedEpsilon).raw_print(std::cout, "pseudoInverseJacobian"); printf("\n");
+//			jointDiffs.t().raw_print(std::cout, "jointDiffs"); printf("\n");
+//			summedJointSpeedDiffs.t().raw_print(std::cout, "summedJointSpeedDiffs"); printf("\n");
+//			speedError.t().raw_print(std::cout, "speedError"); printf("\n");
 //			std::cout << arma::norm(speedError, 2) << std::endl;
 //			printf("\n");
 		}
@@ -227,21 +250,52 @@ double InverseKinematicJacobian::calculateSpeeds(
 	summedJointSpeedDiffs += motorSpeedsVec;
 
 	for (std::pair<NodeID, KinematicNode*> const& node : nodes) {
-		kinematics::Int2MotorMap const& int2MotorMap = node.second->getInt2MotorMap();
-		kinematics::MotorIDs const& motors = node.second->getMotors();
-		MotorValuesMap newValues;
+		if (node.second->isServo())
+		{
+			kinematics::Int2MotorMap const& int2MotorMap = node.second->getInt2MotorMap();
+			kinematics::MotorIDs const& motors = node.second->getMotors();
+			MotorValuesMap newValues;
 
-		for (kinematics::Int2Motor const& i2m : int2MotorMap) {
-			newValues[i2m.second] = summedJointSpeedDiffs(i2m.first);
-		}
+			for (kinematics::Int2Motor const& i2m : int2MotorMap) {
+				newValues[i2m.second] = summedJointSpeedDiffs(i2m.first);
+			}
 
-		/* export */
-		for (MotorID const& motor : motors) {
-			o_values[motor] = newValues[motor];
+			/* export */
+			for (MotorID const& motor : motors) {
+				o_values[motor] = newValues[motor];
+			}
 		}
 	}
 
 	return totalError;
+}
+
+
+double InverseKinematicJacobian::iterationStepGravitation(
+		KinematicTree const& tree
+		, std::map<MotorID, double>& torques
+		, Task const& task
+	) const
+{
+	arma::mat jacobianRaw;
+	arma::mat jacobian = task.getJacobianForTask(tree, jacobianRaw, false);
+	arma::colvec antiGravVec({0., 0., 9.86});
+
+	arma::colvec torquesRaw = jacobian.t() * antiGravVec;
+
+
+	std::map<NodeID, KinematicNode*> const& nodes = tree.getNodes();
+
+	for (std::pair<NodeID, KinematicNode*> const& node : nodes) {
+		kinematics::Int2MotorMap const& int2MotorMap = node.second->getInt2MotorMap();
+		MotorValuesMap newValues;
+
+		for (kinematics::Int2Motor const& i2m : int2MotorMap) {
+			torques[i2m.second] = torquesRaw(i2m.first);
+		}
+	}
+
+	return arma::norm(torquesRaw, 2);
 }
 
 
@@ -343,6 +397,9 @@ arma::colvec InverseKinematicJacobian::getSpeedTargetForTasks(KinematicTree cons
 
 				if (task->hasSpeed() && arma::norm(error, 2) > 0.000000001 ) {
 					error *= task->getSpeedToReachTarget() / arma::norm(error, 2);
+				} else {
+/*					error = arma::zeros(error.n_rows, 1);
+					error(0) = 1;*/
 				}
 
 				errorVec.rows(beginRow, endRow) = error;

@@ -11,14 +11,15 @@
 namespace kinematicEngine {
 
 class TaskLocation : public Task {
+	typedef kinematics::NodeID NodeID;
 public:
 	TaskLocation();
 
-	TaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, const KinematicTree &tree);
+	TaskLocation(std::string name, NodeID baseNode, NodeID effectorNode, const KinematicTree &tree);
 
-	TaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, MotorID referenceNode, const KinematicTree &tree);
+	TaskLocation(std::string name, NodeID baseNode, NodeID effectorNode, NodeID referenceNode, const KinematicTree &tree);
 
-	TaskLocation(std::string name, MotorID baseNode, MotorID effectorNode, const KinematicTree &tree, TaskMethod *method);
+	TaskLocation(std::string name, NodeID baseNode, NodeID effectorNode, const KinematicTree &tree, TaskMethod *method);
 
 	virtual ~TaskLocation();
 

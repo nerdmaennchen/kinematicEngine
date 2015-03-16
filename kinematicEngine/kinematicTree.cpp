@@ -32,7 +32,9 @@ void KinematicTree::setup(const RobotDescription &robotDescription) {
 	m_MotorCnt = 0;
 	for (const auto& in : robotDescription.getNodes()) {
 		m_nodes[in.first] = in.second->cloneDetached();
-		m_MotorCnt += in.second->getMotorCnt();
+		if (in.second->isServo()) {
+			m_MotorCnt += in.second->getMotorCnt();
+		}
 	}
 
 	// for each node, set the correct parent (this will auto-fill the children)

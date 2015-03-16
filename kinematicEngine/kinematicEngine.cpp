@@ -62,6 +62,11 @@ void KinematicEngine::setValueNoise(double valueNoise)
 	m_valueNoise = valueNoise;
 }
 
+void KinematicEngine::setOvershootValues(kinematics::MotorValuesMap overshootValues)
+{
+	m_overshootValues = overshootValues;
+}
+
 void KinematicEngine::setRobotModel(const RobotDescription* robotDescription)
 {
 	m_kinematicTree.setup(*(robotDescription));
@@ -90,8 +95,13 @@ void KinematicEngine::fillTreeWithValues(KinematicTree &tree,
 		kinematics::MotorValuesMap valueDerivativesForNode;
 
 		for (MotorID const& id : motors) {
-			valuesForNode[id] = values.at(id);
-			valueDerivativesForNode[id] = speeds.at(id);
+			if (values.find(id) != values.end()) {
+				// this motor is accessible for inverse kinematics
+				valuesForNode[id] = values.at(id);
+			}
+			if (speeds.find(id) != speeds.end()) {
+				valueDerivativesForNode[id] = speeds.at(id);
+			}
 		}
 
 		node->setValues(valuesForNode);
@@ -123,6 +133,29 @@ std::map<MotorID, double> KinematicEngine::solveIKStepValues(kinematics::MotorVa
 		error = m_inverseKinematic.iterationStep(tasks.getTree(), newValues, tasks.getTasks(), constraints, tasks.getIdleTask());
 	}
 	return newValues;
+}
+
+std::map<MotorID, double> KinematicEngine::solveIKGravityOvershoot(kinematics::MotorValuesMap curValues,
+												kinematics::MotorValuesMap curSpeeds,
+												Tasks& tasks,
+												kinematicEngine::Task& task,
+												double& error)
+{
+	fillTreeWithValues(tasks.getTree(), curValues, curSpeeds, false);
+	std::map<MotorID, double> torques;
+
+	error = m_inverseKinematic.iterationStepGravitation(tasks.getTree(), torques, task);
+
+	for (std::pair<kinematics::NodeID, KinematicNode*> const& node : tasks.getTree().getNodes())
+	{
+		kinematics::MotorIDs const& motorIDs = node.second->getMotors();
+		for (MotorID motor : motorIDs)
+		{
+			torques[motor] = utils::limited(torques[motor], -m_overshootValues[motor], m_overshootValues[motor]);
+		}
+	}
+
+	return torques;
 }
 
 }

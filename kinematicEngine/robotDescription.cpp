@@ -1,5 +1,5 @@
 #include "robotDescription.h"
-#include "kinematicEngine/utils/motorIDs.h"
+#include "kinematicEngine/kinematics.h"
 #include "kinematicEngine/utils/utils.h"
 
 #include <boost/property_tree/xml_parser.hpp>
@@ -23,7 +23,9 @@ RobotDescription::RobotDescription(std::string robotDescriptionPath) {
 	// collect motor IDs and create offset configuration options
 	for (const auto &it : m_nodes) {
 		if (it.second->isServo()) {
-			motorIDs.insert(it.first);
+			for (auto motorID : it.second->getMotors()) {
+				motorIDs.insert(motorID);
+			}
 		}
 	}
 }

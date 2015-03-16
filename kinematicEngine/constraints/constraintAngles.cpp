@@ -20,13 +20,15 @@ ConstraintAngles::ConstraintAngles(KinematicTree const& tree)
 	m_maxValues = arma::zeros(m_numMotors);
 
 	for (std::pair<kinematics::NodeID, KinematicNode*> const& node : tree.getNodes()) {
-		kinematics::MotorValuesMap const& minVals = node.second->getMinValues();
-		kinematics::MotorValuesMap const& maxVals = node.second->getMaxValues();
-		kinematics::Motor2IntMap const& m2iMap = node.second->getMotor2IntMap();
+		if (node.second->isServo()) {
+			kinematics::MotorValuesMap const& minVals = node.second->getMinValues();
+			kinematics::MotorValuesMap const& maxVals = node.second->getMaxValues();
+			kinematics::Motor2IntMap const& m2iMap = node.second->getMotor2IntMap();
 
-		for (kinematics::Motor2Int const& m2i : m2iMap) {
-			m_minValues(m2i.second) = minVals.at(m2i.first);
-			m_maxValues(m2i.second) = maxVals.at(m2i.first);
+			for (kinematics::Motor2Int const& m2i : m2iMap) {
+				m_minValues(m2i.second) = minVals.at(m2i.first);
+				m_maxValues(m2i.second) = maxVals.at(m2i.first);
+			}
 		}
 	}
 }
